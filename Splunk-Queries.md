@@ -18,3 +18,7 @@
 ### Identify network connections being made from a specified host
 `index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" SourceIp=10.150.10.34 | stats count by DestinationIp,EventCode | sort - count`
 
+### Identify all hosts in a network making network connections to a specific IP
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" DestinationIp="68.183.32.229" | stats count by host,EventCode | sort - count`
+
+### Identify DNS queries being performed from a specified 
