@@ -19,6 +19,11 @@
 `index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" SourceIp=10.150.10.34 | stats count by DestinationIp,EventCode | sort - count`
 
 ### Identify all hosts in a network making network connections to a specific IP
-`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" DestinationIp="68.183.32.229" | stats count by host,EventCode | sort - count`
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" DestinationIp="68.183.32.229" | stats count by host,SourceIp,EventCode | sort - count`
 
-### Identify DNS queries being performed from a specified 
+### Identify all hosts in a network who have made a DNS queries for a specific IP
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=22 "68.183.32.229" | stats count by host | sort - count`
+
+### Identify all hosts in a network who are making a network connection to or who have made a DNS query for a specific IP
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" ("EventCode=22" AND "68.183.32.229") OR ("EventCode=3" AND "68.183.32.229") | stats count by ComputerName,EventCode | sort - count`
+
