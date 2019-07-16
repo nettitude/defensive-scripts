@@ -27,3 +27,10 @@
 ### Identify all hosts in a network who are making a network connection to or who have made a DNS query for a specific IP
 `index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" ("EventCode=22" AND "68.183.32.229") OR ("EventCode=3" AND "68.183.32.229") | stats count by ComputerName,EventCode | sort - count`
 
+### Show all hosts in a network who have made a network connection or DNS query to an external IP
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" ("EventCode=22" AND "QueryResults*") OR ("EventCode=3" AND "DestinationIp*") NOT (QueryResults="10.*" OR QueryResults="172.16.*" OR QueryResults="192.168.*") NOT (DestinationIp="10.*" OR DestinationIp="172.16.*" OR DestinationIp="192.168.*") | table ComputerName,Image,DestinationIp,QueryResults`
+
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" ("EventCode=22" AND "QueryResults*") OR ("EventCode=3" AND "DestinationIp*") NOT (QueryResults="10.*" OR QueryResults="172.16.*" OR QueryResults="192.168.*") NOT (DestinationIp="10.*" OR DestinationIp="172.16.*" OR DestinationIp="192.168.*") | stats count(DestinationIp), count(QueryResults) by host, Image`
+
+### Show all executables talking to external IPs or performing DNS queries
+`index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" "C:\\*.exe" NOT (DestinationIp="10.*" OR DestinationIp="172.16.*" OR DestinationIp="192.168.*") NOT (QueryResults="10.*" OR QueryResults="172.16.*" OR QueryResults="192.168.*") | table ComputerName,Image,DestinationIp,QueryResults | sort - count`
