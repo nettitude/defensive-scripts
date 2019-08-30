@@ -39,11 +39,22 @@
 
 ## Lateral Movement
 
+### Show installed services where the name is not mgmt_service (can be done with 7045 or 4697)
+`index=main LogName=System EventCode=7045 NOT (Service_Name=mgmt_service OR Service_Type="*Kernel*") AND (Service_Start_Type="*demand*")
+| eval Message=split(Message,".") 
+| eval Short_Message=mvindex(Message,0) 
+| eval Service_File_Name=substr(Service_File_Name,1,100)."..." 
+| table _time host Service_Name,Service_Type, Service_Start_Type, Service_Account, Short_Message, Service_File_Name`
+
+### Show timeout service control manager events for service anomalies
+`index=main earliest=-7d sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" LogName=System EventCode=7009 Message="A timeout was reached*" 
+| table host _time Message`
+
 ### Show events where svchost is spawning mmc to identify mmc20 dcom
-index=main earliest=-30d ("*svchost.exe*" AND "*mmc.exe*") | table User, ComputerName, ParentImage, ParentCommandLine, Image, CommandLine
+`index=main earliest=-30d ("*svchost.exe*" AND "*mmc.exe*") | table User, ComputerName, ParentImage, ParentCommandLine, Image, CommandLine`
 
 ### Show events containing the dcomlaunch string and calling rundll32
-`index=main earliest=-7d EventCode=1 ParentCommandLine="*dcomlaunch*" OriginalFileName="RUNDLL32.EXE" | table _time, ComputerName, User, Image, CommandLine`
+`index=main earliest=-7d sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 ParentCommandLine="*dcomlaunch*" OriginalFileName="RUNDLL32.EXE" | table _time, ComputerName, User, Image, CommandLine`
 
 ### Show events calling shell32 with the SHCreateLocalServer arguement for dcom
-`index=main earliest=-30d EventCode=1 shell32.dll,SHCreateLocalServerRunDll | table ComputerName, User, CommandLine, ParentCommandLine`
+`index=main earliest=-30d sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 shell32.dll,SHCreateLocalServerRunDll | table ComputerName, User, CommandLine, ParentCommandLine`
