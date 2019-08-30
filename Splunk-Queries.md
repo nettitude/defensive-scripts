@@ -2,9 +2,11 @@
 
 ## Usage Notes
 
-* These are the bulk of the queries demonstrated during the talk, we will be periodically updating the list as we play with new detections and hope/aim to build up a reasonable repository for people to play with.
+* These are the bulk of the queries demonstrated during our different talks, we will be periodically updating the list as we play with new detections and hope/aim to build up a reasonable repository for people to play with.
 
 * These queries were developed in our lab environment, be sure to modify where required, such as the index, sourcetype and source/destionation IPs.
+
+## Kerberos
 
 ### Kerberoasting Query
 `index=main earliest=-25h sourcetype=WinEventLog:Security EventCode=4769 (Ticket_Encryption_Type = 0x17 AND Account_Name != "*$*") | stats count by Account_Name | sort - count`
@@ -34,3 +36,14 @@
 
 ### Show all executables talking to external IPs or performing DNS queries
 `index=main earliest=-25h sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" "C:\\*.exe" NOT (DestinationIp="10.*" OR DestinationIp="172.16.*" OR DestinationIp="192.168.*") NOT (QueryResults="10.*" OR QueryResults="172.16.*" OR QueryResults="192.168.*") | table ComputerName,Image,DestinationIp,QueryResults | sort - count`
+
+## Lateral Movement
+
+### Show events where svchost is spawning mmc to identify mmc20 dcom
+index=main earliest=-30d ("*svchost.exe*" AND "*mmc.exe*") | table User, ComputerName, ParentImage, ParentCommandLine, Image, CommandLine
+
+### Show events containing the dcomlaunch string and calling rundll32
+`index=main earliest=-7d EventCode=1 ParentCommandLine="*dcomlaunch*" OriginalFileName="RUNDLL32.EXE" | table _time, ComputerName, User, Image, CommandLine`
+
+### Show events calling shell32 with the SHCreateLocalServer arguement for dcom
+`index=main earliest=-30d EventCode=1 shell32.dll,SHCreateLocalServerRunDll | table ComputerName, User, CommandLine, ParentCommandLine`
