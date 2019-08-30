@@ -46,9 +46,41 @@
 | eval Service_File_Name=substr(Service_File_Name,1,100)."..." 
 | table _time host Service_Name,Service_Type, Service_Start_Type, Service_Account, Short_Message, Service_File_Name`
 
+`index=main earliest=-7d EventCode=4697 NOT (Service_File_Name="C:\\Windows\\*" OR Service_File_Name="\\SystemRoot\\*" OR Service_File_Name="*C:\\Program Files*\\*")
+AND (Account_Name != "*$*")
+| eval Service_File_Name=substr(Service_File_Name,1,100)."..." 
+| table _time, ComputerName, Account_Name, Service_Name, Service_File_Name, Service_Start_Type`
+
 ### Show timeout service control manager events for service anomalies
 `index=main earliest=-7d sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" LogName=System EventCode=7009 Message="A timeout was reached*" 
 | table host _time Message`
+
+### Show registry write events for services and contain the comspec string
+`index=main earliest=-14d LogName=Microsoft-Windows-Sysmon/Operational EventCode=13 "HKLM\\System\\CurrentControlSet\\Services\\*" AND "*%%COMSPEC%%*" 
+| eval Details=substr(Details,1,100)."..." 
+| Table _time host Image TargetObject Details`
+
+### Identify suspicous binaires making smb network connections - needs context as per the talk
+`index=main earliest=-14d LogName=Microsoft-Windows-Sysmon/Operational (EventCode=3 AND DestinationPort=135 OR DestinationPort=139 OR DestinationPort=445)
+| table UtcTime User Image SourceIp DestinationIp DestinationPort`
+
+### Shows WMI Consumer Events 
+`index=main earliest=-7d SourceName=Microsoft-Windows-Sysmon EventCode=21 | table ComputerName, User, EventType, Consumer, Filter, Operation`
+
+### Shows WMI Filter Events
+`index=main earliest=-7d SourceName=Microsoft-Windows-Sysmon EventCode=19 | table ComputerName, User, EventType, EventNamespace, Name Operation, Query`
+
+### Show process creation events involving wmiprvse and display the parent and child processes with command line arguments
+`index=main earliest=-7d SourceName=Microsoft-Windows-Sysmon EventCode=1 "*wmiprvse.exe*"
+| eval CommandLine=substr(CommandLine,1,100)."..." 
+| Table UtcTime, ComputerName, User, ParentImage, Image, CommandLine, OriginalFileName`
+
+### Show process creation events with windows events versus sysmon events as above
+`index=main earliest=-60d EventCode=4688 Creator_Process_Name="C:\\Windows\\System32\\wbem\\WmiPrvSE.exe" | table Creator_Process_Name, New_Process_Name`
+
+### If WMI is not leveraged within the environmnment, this will show you network logons being made from WMI binaries inside the WBEM directory
+`index=main earliest=-7d “C:\Windows\System32\wbem\” EventCode=4624 | table Account_Name, Logon_Type`
+
 
 ### Show events where svchost is spawning mmc to identify mmc20 dcom
 `index=main earliest=-30d ("*svchost.exe*" AND "*mmc.exe*") | table User, ComputerName, ParentImage, ParentCommandLine, Image, CommandLine`
