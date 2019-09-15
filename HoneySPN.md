@@ -6,9 +6,9 @@
 
 If you don't have RSAT installed, you can just import the ActiveDirectory PS Cmdlets dll.
 
-$SecPassword = ConvertTo-SecureString 'Password_you_want_as_honeySPN' -AsPlainText -Force
+<code>$SecPassword = ConvertTo-SecureString 'Password_you_want_as_honeySPN' -AsPlainText -Force
 
-<code>New-ADUser -Name "MSSQL_Confidential" -AccountPassword $SecPassword -ChangePasswordAtLogon $false -City "Leamington Spa" -Company "Nettitude" -Country "UK" -Enabled $true -Department "Service Accounts" -Description "Account used for privileged access to confidential data" -DisplayName "MSSQL_Confidential" -PasswordNeverExpires $true -SamAccountName "MSSQL_Confidential" -Path "OU=ServiceAccounts,dc=MAC_ACCOUNTS,dc=MAC,dc=local" </code>
+New-ADUser -Name "MSSQL_Confidential" -AccountPassword $SecPassword -ChangePasswordAtLogon $false -City "Leamington Spa" -Company "Nettitude" -Country "UK" -Enabled $true -Department "Service Accounts" -Description "Account used for privileged access to confidential data" -DisplayName "MSSQL_Confidential" -PasswordNeverExpires $true -SamAccountName "MSSQL_Confidential" -Path "OU=ServiceAccounts,dc=MAC_ACCOUNTS,dc=MAC,dc=local" </code>
 
 You could also add -AllowReversiblePasswordEncryption $true to make it REALLY attractive to attackers.
 
